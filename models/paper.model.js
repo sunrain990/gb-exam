@@ -12,6 +12,7 @@ var optionSchema = new mongoose.Schema({
     name: String,
     content: String,
     desc: String,
+    answer: { type: Number, default: 0 },
     imgs: [mongoose.Schema.Types.Mixed]
 });
 
@@ -20,6 +21,7 @@ var topicSchema = new mongoose.Schema({
         desc: { type: String, default: '这是问题描述'},
         type: { type: Number, default: 0 },
         score: { type: Number, default: 0 },
+        time: { type: Date, default: Date.now },
         answers: [mongoose.Schema.Types.Mixed],
         options: [optionSchema],
         imgs: [mongoose.Schema.Types.Mixed]

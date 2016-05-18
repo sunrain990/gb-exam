@@ -3,11 +3,15 @@
  */
 var express = require('express');
 var router = express.Router();
+var _ = require('lodash');
+
+var AZSort = require('../utils/AZSort');
 
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Parent = mongoose.model('Parent');
 var Paper = mongoose.model('Paper');
+
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -219,6 +223,111 @@ router.post('/getpapers', function(req, res, next) {
     Paper.find({authorid:authorid},function(err, doc) {
         res.json({code:1,text:'返回authorid',data:doc})
         console.log(doc);
+    });
+});
+
+
+
+
+
+
+
+
+router.post('/doption',function(req, res, next) {
+    var paper = req.body.paper;
+    var id = paper._id;
+    var topic_id = paper.topic_id;
+    var option_id = paper.option_id;
+    Paper.findById(id,function (err,doc){
+        if(!err){
+            console.log(id,topic_id,option_id);
+            var sub = doc.topics.id(topic_id);
+            console.log(sub ,'lueluelue sub!!!!');
+            //doc.topics.pull({_id:topic_id});
+            var options =  doc.topics.id(topic_id).options;
+            console.log(options,'this options');
+
+            var char = doc.topics.id(topic_id).options.id(option_id).name;
+
+            var dropedoptions = _.remove(options, function(o) {
+                console.log(o.id,'-------',option_id);
+                return o._id != option_id ;
+            });
+            console.log(dropedoptions,'this droped');
+
+            doc.topics.id(topic_id).options = AZSort(dropedoptions,char);
+
+            doc.save(function(err, doc){
+                if(!err){
+                    console.log(doc);
+                    res.json({code:1,text:'查询并删除option_id成功',data:doc})
+                }else{
+                    res.json({code:-1,text:'查询并删除option_id失败',data:err})
+                }
+            });
+            //res.json({code:1,text:'find成功！',data:doc})
+        }else{
+            console.log(err);
+            res.json({code:-1,text:'find失败'})
+        }
+    });
+});
+
+router.post('/coption',function(req, res, next) {
+    var paper = req.body.paper;
+    var id = paper._id;
+    var topic_id = paper.topic_id;
+    Paper.findById(id,function (err,doc) {
+        if (!err) {
+            var name = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[doc.topics.id(topic_id).options.length];
+            console.log('this is letter', name);
+            var option = {
+                name: name,
+                content: '',
+                desc: '选项描述',
+                imgs: []
+            };
+
+            doc.topics.id(topic_id).options.push(option);
+
+            doc.save(function (err, doc) {
+                if (!err) {
+                    console.log(doc);
+                    res.json({code: 1, text: '查询并添加option成功', data: doc})
+                } else {
+                    res.json({code: -1, text: '查询并添加option失败', data: err})
+                }
+            });
+        } else {
+            console.log(err);
+            res.json({code: -1, text: 'find失败'})
+        }
+    });
+});
+
+router.post('/dtopic',function(req, res, next) {
+    var paper = req.body.paper;
+    var id = paper._id;
+    var topic_id = paper.topic_id;
+    var optionid;
+    Paper.findById(id,function (err,doc){
+        if(!err){
+            console.log(doc);
+            doc.topics.pull({_id:topic_id});
+
+            doc.save(function(err, doc){
+                if(!err){
+                    console.log(doc);
+                    res.json({code:1,text:'查询并更新成功',data:doc})
+                }else{
+                    res.json({code:-1,text:'save失败',data:err})
+                }
+            });
+            //res.json({code:1,text:'find成功！',data:doc})
+        }else{
+            console.log(err);
+            res.json({code:-1,text:'find失败'})
+        }
     });
 });
 
