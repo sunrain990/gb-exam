@@ -18,20 +18,21 @@ var optionSchema = new mongoose.Schema({
 
 var topicSchema = new mongoose.Schema({
         name: { type: String },
-        desc: { type: String, default: '这是问题描述'},
+        desc: { type: String, default: ''},
         type: { type: Number, default: 0 },
         score: { type: Number, default: 0 },
         time: { type: Date, default: Date.now },
         answers: [mongoose.Schema.Types.Mixed],
         options: [optionSchema],
+        status: { type: Number, default: 0},
         imgs: [mongoose.Schema.Types.Mixed]
 },
 {versionKey:false}//这个就是处理掉自动插入文档的__v这个属性
 );
 
 var PaperSchema = new mongoose.Schema({
-    name: { type: String, default: '新建试卷' },
-    desc: { type: String, default: '这是试卷描述' },
+    name: { type: String, default: '' },
+    desc: { type: String, default: '' },
     type: { type: Number, default: 1 },
     createTime: { type: Date, default: Date.now  },
     lastEdit: { type: Date, default: Date.now },//当你插入文档，自动就会生成日期

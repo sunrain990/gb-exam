@@ -34,8 +34,8 @@ router.post('/c', function(req, res, next){
 
     if(paper.id == 0){
         var paperO = new Paper({
-            name: '新建试卷',
-            desc: '这是试卷描述',
+            name: '',
+            desc: '',
             type: 1,
             //createTime: { type: Date, default: Date.now  },
             //lastEdit: { type: Date, default: Date.now },//当你插入文档，自动就会生成日期
@@ -163,7 +163,7 @@ router.post('/addtopic', function(req, res, next) {
     if(!paperid){
         return res.json({code:-1,text:'未传有paperid'});
     }else if(!authorid){
-        return res.json({code:-1,text:'未传teacherid'});
+        return res.json({code:-1,text:'未传authorid'});
     }
     var optionnums = req.body.optionnums;
     if(!optionnums){
@@ -181,33 +181,38 @@ router.post('/addtopic', function(req, res, next) {
         var tmpobj = {};
         tmpobj.name = substroptchoices[i];
         tmpobj.content = "";
-        tmpobj.desc = "选项描述";
+        tmpobj.desc = "";
+        tmpobj.answer = 0;
         tmpobj.imgs = [];
         options.push(tmpobj);
     }
+
     console.log('this is options ------->', options);
 
     Paper.findById(paperid, function(err, doc){
         if(!err){
             var obj = {
-                desc: '这是问题描述',
-                name: '这是问题名',
+                desc: '',
+                name: '',
                 type: 0,
                 answers: [],
                 options: options,
                 imgs: []
             };
-            doc.topics.push(obj);
+            //
+
+            var sub = doc['topics'].create(obj);
+            doc['topics'].push(sub);
 
             doc.save(function(err, doc){
                 if(!err){
-                    console.log(doc);
-                    res.json({code:1,text:'查询并更新成功',data:doc})
+                    console.log(sub,'this is sub_id!!!!!!');
+                    //doc.topics.id()
+                    res.json({code:1,text:'查询并更新成功',data:sub})
                 }else{
                     res.json({code:-1,text:'save失败',data:err})
                 }
             });
-
         }else{
             console.log(err);
             res.json({code:-1,text:'查询或更新失败',data:err})
@@ -233,7 +238,7 @@ router.post('/getpapers', function(req, res, next) {
 
 
 
-router.post('/doption',function(req, res, next) {
+router.post('/doption1',function(req, res, next) {
     var paper = req.body.paper;
     var id = paper._id;
     var topic_id = paper.topic_id;
@@ -273,6 +278,37 @@ router.post('/doption',function(req, res, next) {
     });
 });
 
+router.post('/doption',function(req, res, next) {
+    var paper = req.body.paper;
+    var id = paper._id;
+    var topic_id = paper.topic_id;
+    var option_id = paper.option_id;
+    var char = paper.char;
+
+    Paper.findById(id,function (err,doc){
+        if(!err){
+            var sub = doc.topics.id(topic_id);
+
+            doc.topics.id(topic_id).options.pull(option_id);
+
+            doc.topics.id(topic_id).options = AZSort(doc.topics.id(topic_id).options,char);
+
+            doc.save(function(err, doc){
+                if(!err){
+                    res.json({code:1,text:'查询并删除option_id成功',data:doc})
+                }else{
+                    res.json({code:-1,text:'查询并删除option_id失败',data:err})
+                }
+            });
+            //res.json({code:1,text:'find成功！',data:doc})
+        }else{
+            console.log(err);
+            res.json({code:-1,text:'find失败'})
+        }
+    });
+});
+
+
 router.post('/coption',function(req, res, next) {
     var paper = req.body.paper;
     var id = paper._id;
@@ -284,16 +320,19 @@ router.post('/coption',function(req, res, next) {
             var option = {
                 name: name,
                 content: '',
-                desc: '选项描述',
+                desc: '',
+                answer: 0,
                 imgs: []
             };
 
-            doc.topics.id(topic_id).options.push(option);
+            var sub = doc['topics'].id(topic_id).options.create(option);
+
+            doc.topics.id(topic_id).options.push(sub);
 
             doc.save(function (err, doc) {
                 if (!err) {
                     console.log(doc);
-                    res.json({code: 1, text: '查询并添加option成功', data: doc})
+                    res.json({code: 1, text: '查询并添加option成功', data: sub})
                 } else {
                     res.json({code: -1, text: '查询并添加option失败', data: err})
                 }
@@ -309,7 +348,6 @@ router.post('/dtopic',function(req, res, next) {
     var paper = req.body.paper;
     var id = paper._id;
     var topic_id = paper.topic_id;
-    var optionid;
     Paper.findById(id,function (err,doc){
         if(!err){
             console.log(doc);
@@ -329,6 +367,102 @@ router.post('/dtopic',function(req, res, next) {
             res.json({code:-1,text:'find失败'})
         }
     });
+});
+
+router.post('/finishtopic',function(req, res, next) {
+    var paper = req.body.paper;
+    var id = paper._id;
+    var topic = paper.topic;
+    var status = paper.status;
+
+    topic.answers = [];
+
+    console.log(topic);
+    //
+    for(var i=0;i<topic.options.length;i++){
+        if(topic.options[i].answer == 1){
+            topic.answers.push(topic.options[i].name);
+        }
+    }
+
+    topic.status = status;
+    console.log(topic._id,'---- this is topic_id');
+
+    Paper.findOneAndUpdate(
+        {"_id": id,"topics._id": topic._id},
+        {
+            "$set": {
+                "topics.$": topic
+            }
+        },
+        function(err, doc) {
+            if(!err){
+                //console.log(doc);
+                res.json({code:1,text:'完成状态更新成功',data:topic})
+            }else{
+                res.json({code:-1,text:'完成状态更新失败',data:err})
+            }
+        }
+    );
+
+
+    //Paper.findById(id,function (err,doc){
+    //    if(!err){
+    //        console.log('-----doc!',doc);
+    //
+    //        for(var i=0;i<doc.topics.length;i++){
+    //            (function(i){
+    //                if(doc.topics[i]._id = topic._id){
+    //                    //console.log('this is  finish_id',topic);
+    //                    topic.status = 1;
+    //                    console.log(i,'----this is i!!!!', topic._id, doc.topics[i]._id);
+    //                    doc.topics[i] = topic;
+    //                }
+    //            })(i);
+    //        }
+    //
+    //        console.log(doc,'then');
+    //
+    //        doc.save(function(err, doc){
+    //            if(!err){
+    //                //console.log(doc);
+    //                res.json({code:1,text:'完成状态更新成功',data:topic})
+    //            }else{
+    //                res.json({code:-1,text:'完成状态更新失败',data:err})
+    //            }
+    //        });
+    //    }else{
+    //        //console.log(err);
+    //        res.json({code:-1,text:'find失败'})
+    //    }
+    //});
+});
+
+
+router.post('/edittopic',function(req, res, next) {
+    var paper = req.body.paper;
+    var id = paper._id;
+    var topic_id = paper.topic._id;
+    var status = paper.status;
+
+    console.log(id,status,topic_id);
+
+    Paper.findOneAndUpdate(
+        {"_id": id,"topics._id": topic_id},
+        {
+            "$set": {
+                "topics.$.status": status
+            }
+        },
+        function(err, doc) {
+            if(!err){
+                //console.log(doc);
+                res.json({code:1,text:'完成状态更新成功',data:doc})
+            }else{
+                res.json({code:-1,text:'完成状态更新失败',data:err})
+            }
+        }
+    );
 });
 
 module.exports = router;
