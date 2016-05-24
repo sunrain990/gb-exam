@@ -376,7 +376,26 @@ router.post('/finishtopic',function(req, res, next) {
     var status = paper.status;
 
     topic.answers = [];
+    console.log(topic.imgs, 'this is topic imgs!');
+    topic.status = status;
 
+    var topictmp = [];
+
+    if(topic.imgs){
+
+        for(var i=0;i<topic.imgs.length;i++){
+            console.log(topic.imgs[i],'before');
+            delete topic.imgs[i]['$$hashKey'];
+            console.log(topic.imgs[i],'after');
+            //var jsontmp = JSON.stringify(topic.imgs[i]);
+            //
+            //console.log(jsontmp,'--------------');
+            //
+            //delete jsontmp
+            //topictmp.push(JSON.parse(jsontmp));
+            //console.log(topictmp,'this is topictmp');
+        }
+    }
     console.log(topic);
     //
     for(var i=0;i<topic.options.length;i++){
@@ -384,9 +403,6 @@ router.post('/finishtopic',function(req, res, next) {
             topic.answers.push(topic.options[i].name);
         }
     }
-
-    topic.status = status;
-    console.log(topic._id,'---- this is topic_id');
 
     Paper.findOneAndUpdate(
         {"_id": id,"topics._id": topic._id},
