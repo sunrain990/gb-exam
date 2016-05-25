@@ -4,11 +4,7 @@
 var mongoose = require('mongoose');
 var moment = require('moment');
 
-function dateFilter (val) {
-    return moment(val).format('YYYY-MM-DD HH:mm:ss')
-}
-
-var optionSchema = new mongoose.Schema({
+var OptionSchema = new mongoose.Schema({
     name: String,
     content: String,
     desc: String,
@@ -16,19 +12,27 @@ var optionSchema = new mongoose.Schema({
     imgs: [mongoose.Schema.Types.Mixed]
 });
 
-var topicSchema = new mongoose.Schema({
+var TopicSchema = new mongoose.Schema({
         name: { type: String },
         desc: { type: String, default: ''},
         type: { type: Number, default: 0 },
         score: { type: Number, default: 0 },
         time: { type: Date, default: Date.now },
         answers: [mongoose.Schema.Types.Mixed],
-        options: [optionSchema],
-        status: { type: Number, default: 0},
-        imgs: [mongoose.Schema.Types.Mixed]
-},
-{versionKey:false}//这个就是处理掉自动插入文档的__v这个属性
+        options: [OptionSchema],
+        status: { type: Number, default: 0 },
+        imgs: [ mongoose.Schema.Types.Mixed ],
+        paperid: {
+            type: mongoose.Schema.Types.ObjectId, ref: 'Paper'
+        },
+        authorid: {
+            type: Number, default: 0,required: true
+        }
+}
+//,{versionKey:false}//这个就是处理掉自动插入文档的__v这个属性
 );
+
+var Topic = mongoose.model('Topic', TopicSchema);
 
 var PaperSchema = new mongoose.Schema({
     name: { type: String, default: '' },
@@ -38,10 +42,14 @@ var PaperSchema = new mongoose.Schema({
     lastEdit: { type: Date, default: Date.now },//当你插入文档，自动就会生成日期
     topicNO: { type: Number, default: 0},
     authorid: { type: Number, default: 0},
-    topics: [topicSchema],
+    topics: [
+        {
+            type: mongoose.Schema.Types.ObjectId, ref: 'Topic'
+        }
+    ],
     imgs: [mongoose.Schema.Types.Mixed]
-},
-{versionKey:false}//这个就是处理掉自动插入文档的__v这个属性
+}
+//, {versionKey:false}//这个就是处理掉自动插入文档的__v这个属性
 );
 
-mongoose.model('Paper', PaperSchema);
+var Paper = mongoose.model('Paper', PaperSchema);

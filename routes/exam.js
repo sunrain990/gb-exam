@@ -11,6 +11,7 @@ var mongoose = require('mongoose');
 var User = mongoose.model('User');
 var Parent = mongoose.model('Parent');
 var Paper = mongoose.model('Paper');
+var Topic = mongoose.model('Topic');
 
 
 /* GET home page. */
@@ -42,7 +43,7 @@ router.post('/c', function(req, res, next){
             //topicNO: { type: Number, default: 0},
             authorid: paper.authorid,
             imgs: [],
-            topics: []
+            //topics: []
         });
 
 
@@ -73,19 +74,69 @@ router.post('/c', function(req, res, next){
     }else{
         var id = paper.id;
 
+        var paging = req.body.paging;
+
+        var limit = paging.limit;
+        var page = paging.page;
+
         var query = {
             _id: id
         };
         console.log(query, 'this is query');
-        Paper.findOne(query, function(err, doc){
+
+        Paper.findById(id,function(err, paperdoc) {
             if(!err){
-                console.log(doc)
-                res.json({code:1,text:'返回查询成功',data:doc})
-            }else{
+                console.log(paperdoc, ' - -- - - - findbyid  paper!');
+
+
+                Paper
+                    .findOne(query)
+                    .populate({
+                        path: 'topics',
+                        options: {
+                            limit: limit,
+                            sort: {
+                                time: -1
+                            },
+                            skip: (page-1)*limit
+                        }
+                    })
+                    .exec(function(err, paper){
+                        if(!err){
+                            console.log(paper)
+                            res.json({
+                                code:1,
+                                text:'返回查询成功',
+                                data:paper,
+                                paging: {
+                                    total: paperdoc.topics.length,
+                                    limit: limit,
+                                    page: page
+                                }
+                            })
+                        }else{
+                            console.log(err);
+                            res.json({code:-1,text:err});
+                        }
+                    });
+
+
+            }else {
                 console.log(err);
-                res.json({code:-1,text:err});
+                res.json({code:1,text:'分页查询错误'})
             }
         });
+
+
+        //Paper.findOne(query, function(err, doc){
+        //    if(!err){
+        //        console.log(doc)
+        //        res.json({code:1,text:'返回查询成功',data:doc})
+        //    }else{
+        //        console.log(err);
+        //        res.json({code:-1,text:err});
+        //    }
+        //});
     }
 })
 
@@ -122,7 +173,7 @@ router.post('/u', function(req, res, next){
     Paper.findByIdAndUpdate(id, paper, options, function(err, doc){
         if(!err){
             console.log(doc);
-            res.json({code:1,text:'查询并更新成功',data:doc})
+            res.json({code:1,text:'保存成功!',data:doc})
         }else{
             console.log(err);
             res.json({code:-1,text:'查询或更新失败',data:err})
@@ -191,28 +242,50 @@ router.post('/addtopic', function(req, res, next) {
 
     Paper.findById(paperid, function(err, doc){
         if(!err){
-            var obj = {
-                desc: '',
+
+            var topic = new Topic({
                 name: '',
+                desc: '',
                 type: 0,
                 answers: [],
                 options: options,
-                imgs: []
-            };
+                imgs: [],
+                paperid: paperid,
+                authorid: authorid
+            });
+
+            topic.save(function(err, topicdoc) {
+                if(!err){
+                    console.log(topicdoc, 'this is topicdoc');
+                    doc.topics.push(topicdoc);
+
+                    doc.save(function(err, doc){
+                        if(!err){
+                            console.log(doc,'this is doc');
+                            //doc.topics.id()
+                            res.json({code:1,text:'查询并更新成功',data:topicdoc})
+                        }else{
+                            res.json({code:-1,text:'save失败',data:err})
+                        }
+                    });
+                }else {
+                    console.log(err);
+                    res.json({code: -1, text: 'topic save出错',data:err});
+                }
+            })
+
+            //var obj = {
+            //    desc: '',
+            //    name: '',
+            //    type: 0,
+            //    answers: [],
+            //    options: options,
+            //    imgs: []
+            //};
             //
 
-            var sub = doc['topics'].create(obj);
-            doc['topics'].push(sub);
-
-            doc.save(function(err, doc){
-                if(!err){
-                    console.log(sub,'this is sub_id!!!!!!');
-                    //doc.topics.id()
-                    res.json({code:1,text:'查询并更新成功',data:sub})
-                }else{
-                    res.json({code:-1,text:'save失败',data:err})
-                }
-            });
+            //var sub = doc['topics'].create(obj);
+            //doc['topics'].push(sub);
         }else{
             console.log(err);
             res.json({code:-1,text:'查询或更新失败',data:err})
@@ -285,27 +358,44 @@ router.post('/doption',function(req, res, next) {
     var option_id = paper.option_id;
     var char = paper.char;
 
-    Paper.findById(id,function (err,doc){
-        if(!err){
-            var sub = doc.topics.id(topic_id);
+    Topic.findById(topic_id, function(err, doc) {
+        if(!err) {
+            doc.options.pull(option_id);
+            doc.options = AZSort(doc.options, char);
 
-            doc.topics.id(topic_id).options.pull(option_id);
-
-            doc.topics.id(topic_id).options = AZSort(doc.topics.id(topic_id).options,char);
-
-            doc.save(function(err, doc){
-                if(!err){
-                    res.json({code:1,text:'查询并删除option_id成功',data:doc})
-                }else{
-                    res.json({code:-1,text:'查询并删除option_id失败',data:err})
+            doc.save(function(err, doc) {
+                if(!err) {
+                    res.json({code:1,text:'删除选项成功',data:doc})
+                }else {
+                    res.json({code:-1,text:'删除选项失败',data:err})
                 }
             });
-            //res.json({code:1,text:'find成功！',data:doc})
-        }else{
-            console.log(err);
-            res.json({code:-1,text:'find失败'})
+        }else {
+            res.json({code:-1, text: '删除失败', data: err});
         }
     });
+
+    //Paper.findById(id,function (err,doc){
+    //    if(!err){
+    //        var sub = doc.topics.id(topic_id);
+    //
+    //        doc.topics.id(topic_id).options.pull(option_id);
+    //
+    //        doc.topics.id(topic_id).options = AZSort(doc.topics.id(topic_id).options,char);
+    //
+    //        doc.save(function(err, doc){
+    //            if(!err){
+    //                res.json({code:1,text:'查询并删除option_id成功',data:doc})
+    //            }else{
+    //                res.json({code:-1,text:'查询并删除option_id失败',data:err})
+    //            }
+    //        });
+    //        //res.json({code:1,text:'find成功！',data:doc})
+    //    }else{
+    //        console.log(err);
+    //        res.json({code:-1,text:'find失败'})
+    //    }
+    //});
 });
 
 
@@ -313,9 +403,10 @@ router.post('/coption',function(req, res, next) {
     var paper = req.body.paper;
     var id = paper._id;
     var topic_id = paper.topic_id;
-    Paper.findById(id,function (err,doc) {
-        if (!err) {
-            var name = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[doc.topics.id(topic_id).options.length];
+
+    Topic.findById(topic_id, function(err, doc) {
+        if(!err) {
+            var name = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[doc.options.length];
             console.log('this is letter', name);
             var option = {
                 name: name,
@@ -325,23 +416,54 @@ router.post('/coption',function(req, res, next) {
                 imgs: []
             };
 
-            var sub = doc['topics'].id(topic_id).options.create(option);
+            var sub = doc.options.create(option);
 
-            doc.topics.id(topic_id).options.push(sub);
+            doc.options.push(sub);
 
-            doc.save(function (err, doc) {
-                if (!err) {
+            doc.save(function(err, doc) {
+                if(!err) {
                     console.log(doc);
-                    res.json({code: 1, text: '查询并添加option成功', data: sub})
+                    res.json({code:1, text: '添加选项成功', data: sub});
                 } else {
-                    res.json({code: -1, text: '查询并添加option失败', data: err})
+                    res.json({code:-1, text: '查询并添加option失败', data:err});
                 }
-            });
-        } else {
+            })
+        }else {
             console.log(err);
-            res.json({code: -1, text: 'find失败'})
+            res.json({code: -1, text: '添加选线失败', data: err});
         }
     });
+
+
+    //Paper.findById(id,function (err,doc) {
+    //    if (!err) {
+    //        var name = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[doc.topics.id(topic_id).options.length];
+    //        console.log('this is letter', name);
+    //        var option = {
+    //            name: name,
+    //            content: '',
+    //            desc: '',
+    //            answer: 0,
+    //            imgs: []
+    //        };
+    //
+    //        var sub = doc['topics'].id(topic_id).options.create(option);
+    //
+    //        doc.topics.id(topic_id).options.push(sub);
+    //
+    //        doc.save(function (err, doc) {
+    //            if (!err) {
+    //                console.log(doc);
+    //                res.json({code: 1, text: '查询并添加option成功', data: sub})
+    //            } else {
+    //                res.json({code: -1, text: '查询并添加option失败', data: err})
+    //            }
+    //        });
+    //    } else {
+    //        console.log(err);
+    //        res.json({code: -1, text: 'find失败'})
+    //    }
+    //});
 });
 
 router.post('/dtopic',function(req, res, next) {
@@ -356,15 +478,25 @@ router.post('/dtopic',function(req, res, next) {
             doc.save(function(err, doc){
                 if(!err){
                     console.log(doc);
-                    res.json({code:1,text:'查询并更新成功',data:doc})
+
+                    Topic.findByIdAndRemove(topic_id, function(err, topicdoc) {
+                        if(!err){
+                            console.log(topicdoc,'this is removed topicdoc');
+                            res.json({code:1,text:'删除选项成功',data:doc})
+                        }else {
+                            console.log(err)
+                            res.json({code:-1,text:'删除选项失败',data:err})
+                        }
+                    });
+
                 }else{
-                    res.json({code:-1,text:'save失败',data:err})
+                    res.json({code:-1,text:'删除选项失败',data:err})
                 }
             });
             //res.json({code:1,text:'find成功！',data:doc})
         }else{
             console.log(err);
-            res.json({code:-1,text:'find失败'})
+            res.json({code:-1,text:'删除选项失败',data:err})
         }
     });
 });
@@ -373,13 +505,13 @@ router.post('/finishtopic',function(req, res, next) {
     var paper = req.body.paper;
     var id = paper._id;
     var topic = paper.topic;
+    var topic_id = topic._id;
     var status = paper.status;
 
     topic.answers = [];
     console.log(topic.imgs, 'this is topic imgs!');
     topic.status = status;
 
-    var topictmp = [];
 
     if(topic.imgs){
 
@@ -399,27 +531,48 @@ router.post('/finishtopic',function(req, res, next) {
     console.log(topic);
     //
     for(var i=0;i<topic.options.length;i++){
+        delete topic.options[i]['$$hashKey'];
         if(topic.options[i].answer == 1){
             topic.answers.push(topic.options[i].name);
         }
     }
 
-    Paper.findOneAndUpdate(
-        {"_id": id,"topics._id": topic._id},
-        {
-            "$set": {
-                "topics.$": topic
-            }
-        },
-        function(err, doc) {
-            if(!err){
-                //console.log(doc);
-                res.json({code:1,text:'完成状态更新成功',data:topic})
-            }else{
-                res.json({code:-1,text:'完成状态更新失败',data:err})
-            }
+    delete topic['_id'];
+
+    console.log(topic,'faaafter');
+
+    var options = {
+        new: true
+    };
+
+    console.log(topic_id, 'this is topic_id');
+
+    Topic.findByIdAndUpdate(topic_id, topic, options, function(err, doc){
+        if(!err){
+            console.log(doc);
+            res.json({code:1,text:'保存题目成功!',data:doc})
+        }else{
+            console.log(err);
+            res.json({code:-1,text:'保存题目失败',data:err})
         }
-    );
+    });
+
+    //Paper.findOneAndUpdate(
+    //    {"_id": id,"topics._id": topic._id},
+    //    {
+    //        "$set": {
+    //            "topics.$": topic
+    //        }
+    //    },
+    //    function(err, doc) {
+    //        if(!err){
+    //            //console.log(doc);
+    //            res.json({code:1,text:'完成状态更新成功',data:topic})
+    //        }else{
+    //            res.json({code:-1,text:'完成状态更新失败',data:err})
+    //        }
+    //    }
+    //);
 
 
     //Paper.findById(id,function (err,doc){
@@ -458,27 +611,41 @@ router.post('/finishtopic',function(req, res, next) {
 router.post('/edittopic',function(req, res, next) {
     var paper = req.body.paper;
     var id = paper._id;
-    var topic_id = paper.topic._id;
+    var topic_id = paper.topic_id;
     var status = paper.status;
 
     console.log(id,status,topic_id);
 
-    Paper.findOneAndUpdate(
-        {"_id": id,"topics._id": topic_id},
-        {
-            "$set": {
-                "topics.$.status": status
-            }
-        },
-        function(err, doc) {
-            if(!err){
-                //console.log(doc);
-                res.json({code:1,text:'完成状态更新成功',data:doc})
-            }else{
-                res.json({code:-1,text:'完成状态更新失败',data:err})
-            }
+    var options = {
+        new: true
+    };
+
+    Topic.findByIdAndUpdate(topic_id, {status:0}, options, function(err, doc){
+        if(!err){
+            console.log(doc);
+            res.json({code:1,text:'编辑题目成功!',data:doc})
+        }else{
+            console.log(err);
+            res.json({code:-1,text:'编辑题目失败',data:err})
         }
-    );
+    });
+
+    //Paper.findOneAndUpdate(
+    //    {"_id": id,"topics._id": topic_id},
+    //    {
+    //        "$set": {
+    //            "topics.$.status": status
+    //        }
+    //    },
+    //    function(err, doc) {
+    //        if(!err){
+    //            //console.log(doc);
+    //            res.json({code:1,text:'完成状态更新成功',data:doc})
+    //        }else{
+    //            res.json({code:-1,text:'完成状态更新失败',data:err})
+    //        }
+    //    }
+    //);
 });
 
 module.exports = router;

@@ -3,113 +3,44 @@ var router = express.Router();
 
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
-var Parent = mongoose.model('Parent');
-var Paper = mongoose.model('Paper');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
 });
 
-router.get('/test', function(req, res, next){
-  var user = new User({
-    uid: 1,
-    username: 'Sid',
-    createTime: new Date()
-  });
-  user.save(function(err){
-    if(err){
-      res.end('Error');
-      return next();
-    }
-    User.find({}, function(err, docs){
-      if(err) {
-        res.end('Error');
-        return next();
-      }
+router.post('/c',function(req, res ,next){
+  var user = req.body.user;
 
-      res.json(docs);
-    })
-  })
+  var jstring = JSON.stringify(user);
 
-  //User.findOne({username: 'Sid'}, function(err, doc) {
-  //  if(err) {
-  //    console.log('findOne err:', err);
-  //    return;
-  //  }
-  //  if(doc) {
-  //    doc.remove();
-  //    User.find({}, function(err, docs){
-  //      if(err) {
-  //        res.end('Error');
-  //        return next();
-  //      }
-  //
-  //      res.json(docs);
-  //    })
-  //  }
-  //})
-})
-
-router.get('/test1', function(req, res, next) {
-  var paper = new Paper({
-    //name: 'bite',
-    //desc: 'hoho',
-    ////createTime: { type: Date, get: dateFilter },
-    ////lastEdit: { type: Date, default: Date.now },//当你插入文档，自动就会生成日期
-    //topicNO: 1,
-    //authorid: 2,
-    //topics: [{
-    //  name: 'topic',
-    //  desc: 'desc',
-    //  score: 5,
-    //  imgs:[],
-    //  answers: ['A','B'],
-    //  options: [{
-    //    name: 'naming',
-    //    content: 'contentss',
-    //    desc: 'ddesc'
-    //  }]
-    //}]
+  var user0 = new User({
+    email: '',
+    password: '',
+    nickname: user.name,
+    truename: user.name,
+    gender: user.gender,
+    city: '',
+    mobile: '',
+    qq: '',
+    weixin: '',
+    signature: jstring,
+    company: user.company,
+    locked: 0,
+    //loginTime: '',
+    loginIp: '0.0.0.0',
+    lastLogin: 'logined'
   });
 
+  delete user0['_id'];
+  delete user0['id'];
 
-  paper.save(function (err) {
-    if (err) {
-      res.end('Error');
-      return next();
-    }
-    Paper.find({}, function (err, docs) {
-      if (err) {
-        res.end('Error');
-        return next();
-      }
+  User.findOneAndUpdate({nickname: user.name},user0,{upsert:true},function(err,re) {
+    console.log(err,re);
+    res.json({code:1});
+  });
 
-      res.json(docs);
-    })
-  })
-})
-
-router.get('/test2', function(req, res, next) {
-
-  Paper.findOne({}, function(err, doc) {
-    if(err) {
-      console.log('findOne err:', err);
-      return;
-    }
-    if(doc) {
-      doc.remove();
-      Paper.find({}, function (err, docs) {
-        if (err) {
-          res.end('Error');
-          return next();
-        }
-
-        res.json(docs);
-      })
-    }
-  })
-})
+});
 
 
 
