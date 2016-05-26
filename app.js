@@ -11,6 +11,7 @@ var db = mongoose();
 var routes = require('./routes/index');
 var users = require('./routes/users');
 var exam = require('./routes/exam');
+var exam_g = require('./routes/exam_g');
 
 var cors = require('cors');
 
@@ -36,6 +37,7 @@ app.use(cors());
 app.use('/', routes);
 app.use('/users', users);
 app.use('/exam', exam);
+app.use('/exam_g', exam_g);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

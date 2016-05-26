@@ -9,7 +9,6 @@ var AZSort = require('../utils/AZSort');
 
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
-var Parent = mongoose.model('Parent');
 var Paper = mongoose.model('Paper');
 var Topic = mongoose.model('Topic');
 
@@ -24,6 +23,9 @@ router.get('/', function(req, res, next) {
 router.post('/c', function(req, res, next){
     var paper = req.body.paper;
     console.log(paper);
+
+    var limit = paging.limit;
+    var page = paging.page;
 
     if(!paper){
         return res.json({code:-1,text:'失败，未有paper对象'});
@@ -53,7 +55,11 @@ router.post('/c', function(req, res, next){
                 return next();
             } else{
                 console.log(doc);
-                res.json({code:1,text:'新建成功',data:doc});
+                res.json({code:1,text:'新建成功',data:doc,  paging: {
+                    total: 0,
+                    limit: limit,
+                    page: page
+                }});
             }
         });
 
