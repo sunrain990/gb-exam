@@ -22,6 +22,7 @@ router.get('/', function(req, res, next) {
 // new and select
 router.post('/c', function(req, res, next){
     var paper = req.body.paper;
+    var paging = req.body.paging;
     console.log(paper);
 
     var limit = paging.limit;
@@ -80,10 +81,10 @@ router.post('/c', function(req, res, next){
     }else{
         var id = paper.id;
 
-        var paging = req.body.paging;
-
-        var limit = paging.limit;
-        var page = paging.page;
+        //var paging = req.body.paging;
+        //
+        //var limit = paging.limit;
+        //var page = paging.page;
 
         var query = {
             _id: id
