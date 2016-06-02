@@ -305,7 +305,8 @@ router.post('/getpapers', function(req, res, next) {
     if(!authorid){
         return res.json({code:-1,text:'未传authorid'})
     }
-    Paper.find({authorid:authorid},function(err, doc) {
+    //查询题库为1的，没有生成器生成的题库模版
+    Paper.find({authorid:authorid, type: 1},function(err, doc) {
         res.json({code:1,text:'返回authorid',data:doc})
         console.log(doc);
     });
@@ -486,15 +487,17 @@ router.post('/dtopic',function(req, res, next) {
                 if(!err){
                     console.log(doc);
 
-                    Topic.findByIdAndRemove(topic_id, function(err, topicdoc) {
-                        if(!err){
-                            console.log(topicdoc,'this is removed topicdoc');
-                            res.json({code:1,text:'删除选项成功',data:doc})
-                        }else {
-                            console.log(err)
-                            res.json({code:-1,text:'删除选项失败',data:err})
-                        }
-                    });
+                    //Topic.findByIdAndRemove(topic_id, function(err, topicdoc) {
+                    //    if(!err){
+                    //        console.log(topicdoc,'this is removed topicdoc');
+                    //        res.json({code:1,text:'删除选项成功',data:doc})
+                    //    }else {
+                    //        console.log(err)
+                    //        res.json({code:-1,text:'删除选项失败',data:err})
+                    //    }
+                    //});
+
+                    res.json({code:1,text:'删除选项成功',data:doc})
 
                 }else{
                     res.json({code:-1,text:'删除选项失败',data:err})
@@ -656,3 +659,21 @@ router.post('/edittopic',function(req, res, next) {
 });
 
 module.exports = router;
+
+
+
+
+
+
+//Model.count().exec(function(err, count){
+//
+//    var random = Math.floor(Math.random() * count);
+//
+//    Model.findOne().skip(random).exec(
+//        function (err, result) {
+//
+//            // result is random
+//
+//        });
+//
+//});
