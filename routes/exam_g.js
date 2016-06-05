@@ -947,22 +947,56 @@ router.post('/cg_ran', function (req, res, next) {
                     console.log(doc, '------');
                     concatedArr = _.concat(concatedArr, doc.topics);
                 });
-                console.log(concatedArr);
 
                 var sampledArr = _.sampleSize(concatedArr, _.random(topic_count, topic_count));
+                console.log(sampledArr, 'this is samled aaaaarr');
+
+                //将正确答案计入mark
+                var mark = sampledArr.map(function(sampled) {
+                    return {
+                        _id: sampled._id,
+                        answers: sampled.answers
+                    }
+                });
+
+                var keyed = _.keyBy(mark, '_id');
+
+                //answers清空
+                console.log(keyed, 'this is mark---');
+
+
+                for(var i=0;i<sampledArr.length;i++){
+                    for(var j=0;j<sampledArr[i].options.length;j++) {
+                        sampledArr[i].options[j].answer = 0;
+                    }
+
+                    //sampledArr[i].answers = [];
+
+                    //if(sampledArr.answers) {
+                    //    var a = sampledArr.answers.slice();
+                    //    console.log(a,'-----')
+                    //    sampledArr[i].trueanswers = a;
+                    //}
+                    sampledArr[i].trueanswers = sampledArr[i].answers;
+                    sampledArr[i].answers = [];
+                    console.log(sampledArr[i].answers,sampledArr[i].trueanswers,'-----1-1-1-1--1-1-1-')
+                }
 
                 var paper2exam0 = new Paper2exam({
                     name: name,
                     desc: desc,
                     //随机生成卷
                     type: 0,
+                    //是否完成
+                    status: 0,
                     topicNO: topic_count,
                     authorid: author_id,
                     classid: class_id,
                     userid: user_id,
                     generator: generator_id,
                     topics: sampledArr,
-                    imgs: []
+                    imgs: [],
+                    mark: keyed
                 });
 
                 paper2exam0.save(function(err, doc){
@@ -972,6 +1006,8 @@ router.post('/cg_ran', function (req, res, next) {
                             code: 1,
                             text: '返回查询成功',
                             data: doc
+                            //,
+                            //sampledArr:sampledArr
                         })
                     }else{
                         res.json({code:-1,text:'新建考题失败save失败',data:err})

@@ -19,6 +19,7 @@ var TopicSchema = new mongoose.Schema({
         score: { type: Number, default: 0 },
         time: { type: Date, default: Date.now },
         answers: [mongoose.Schema.Types.Mixed],
+        trueanswers: [mongoose.Schema.Types.Mixed],
         options: [OptionSchema],
         status: { type: Number, default: 0 },
         imgs: [ mongoose.Schema.Types.Mixed ],

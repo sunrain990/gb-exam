@@ -19,8 +19,11 @@ var Paper2examTopicSchema = new mongoose.Schema({
         score: { type: Number, default: 0 },
         time: { type: Date, default: Date.now },
         answers: [ mongoose.Schema.Types.Mixed ],
+        trueanswers: [ mongoose.Schema.Types.Mixed ],
         options: [ Paper2examOptionSchema ],
         status: { type: Number, default: 0 },
+        //题目正确与否 0false
+        correct: { type: Number, default: 0 },
         imgs: [ mongoose.Schema.Types.Mixed ],
         paperid: {
             type: mongoose.Schema.Types.ObjectId
@@ -49,7 +52,9 @@ var Paper2examSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, ref: 'Exam_g'
     },
     topics: [ Paper2examTopicSchema ],
-    imgs: [ mongoose.Schema.Types.Mixed ]
+    imgs: [ mongoose.Schema.Types.Mixed ],
+    //评分标准
+    mark: { type: mongoose.Schema.Types.Mixed }
 }
 //, {versionKey:false}//这个就是处理掉自动插入文档的__v这个属性
 );
