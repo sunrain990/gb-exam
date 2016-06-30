@@ -658,6 +658,25 @@ router.post('/edittopic',function(req, res, next) {
     //);
 });
 
+router.post('/mypapers',function(req, res, next) {
+    var exam = req.body.exam;
+    var authorid = exam.authorid;
+    if(!authorid){
+        return res.json({code:-1,text:'未传authorid'})
+    }
+    //查询题库为1的，没有生成器生成的题库模版
+    Paper.find({authorid:authorid, type: 1},function(err, doc) {
+        if(!err) {
+            res.json({code:1,text:'返回authorid',data:doc})
+        }else {
+            console.log(doc);
+            res.json({code:-1, text: '返回我的题库错误'});
+        }
+
+    });
+});
+
+
 module.exports = router;
 
 

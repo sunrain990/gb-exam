@@ -26,7 +26,7 @@ function handleError (database) {
             conn = mysql.createConnection({
                 host: 'rdsf39n5tp6w482946xa.mysql.rds.aliyuncs.com',
                 user: 'ecp_test',
-                password: 'ecp_test',
+                password: 'Gem231320',
                 database: database,
                 port: 3306
             });
@@ -44,7 +44,7 @@ function handleError (database) {
             conn = mysql.createConnection({
                 host: 'rdsf39n5tp6w482946xa.mysql.rds.aliyuncs.com',
                 user: 'ecp_test',
-                password: 'ecp_test',
+                password: 'Gem231320',
                 database: database,
                 port: 3306
             });
@@ -130,7 +130,7 @@ function handlePool (database) {
             pool = mysql.createPool({
                 host: 'rdsf39n5tp6w482946xa.mysql.rds.aliyuncs.com',
                 user: 'ecp_test',
-                password: 'ecp_test',
+                password: 'Gem231320',
                 database: database,
                 port: 3306
             });
@@ -148,7 +148,7 @@ function handlePool (database) {
             pool = mysql.createPool({
                 host: 'rdsf39n5tp6w482946xa.mysql.rds.aliyuncs.com',
                 user: 'ecp_test',
-                password: 'ecp_test',
+                password: 'Gem231320',
                 database: database,
                 port: 3306
             });

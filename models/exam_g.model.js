@@ -13,7 +13,10 @@ var exam_gSchema = new mongoose.Schema({
         //0. 随机卷 1. 模版考试
         type: Number, default: 0
     },
-    paper_ids: [mongoose.Schema.Types.Mixed],
+    // paper_ids: [mongoose.Schema.Types.Mixed],
+    paper_ids: [{
+        type: mongoose.Schema.Types.ObjectId, ref: 'Paper'
+    }],
     class_ids: [mongoose.Schema.Types.Mixed],
     author_id: {
         type: Number,
@@ -34,13 +37,16 @@ var exam_gSchema = new mongoose.Schema({
         }
 
     ],
+    duration: {
+        type: String, default: '120'
+    },
     create_time: {
         type: Date, default: Date.now
     },
-    open_time: {
+    start_time: {
         type: Date
     },
-    close_time: {
+    end_time: {
         type: Date
     }
 });

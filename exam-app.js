@@ -13,6 +13,7 @@ var users = require('./routes/users');
 var exam = require('./routes/exam');
 var exam_g = require('./routes/exam_g');
 var paper2exam = require('./routes/paper2exam');
+var mis = require('./routes/mistake');
 
 var cors = require('cors');
 
@@ -40,6 +41,7 @@ app.use('/users', users);
 app.use('/exam', exam);
 app.use('/exam_g', exam_g);
 app.use('/p2e', paper2exam);
+app.use('/mis', mis);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

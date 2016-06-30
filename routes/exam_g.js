@@ -68,20 +68,16 @@ router.post('/c', function (req, res, next) {
             //create_time: {
             //    type: Date, default: Date.now
             //}
-            //,
-            //open_time: {
-            //    type: Date
-            //},
-            //close_time: {
-            //    type: Date
-            //}
+            ,
+            start_time: exam_g.start_time,
+            end_time: exam_g.end_time
         });
 
         //var paper0 = new Paper();
         exam_g0.save(function (err, doc) {
             if (!err) {
                 console.log(doc);
-                res.json({code: 1, text: '新建generator成功！', data: doc});
+                res.json({code: 1, text: '新建generator成功！', data: doc, paperdoc: []});
             } else {
                 res.json({code: -1, text: '新建generator失败！', data: err});
             }
@@ -195,17 +191,25 @@ router.post('/c', function (req, res, next) {
                 })
                 .exec(function (err, paper) {
                     if (!err) {
-                        console.log(paper)
-                        res.json({
-                            code: 1,
-                            text: '返回查询成功',
-                            data: paper,
-                            //paging: {
-                            //    total: paperdoc.topics.length,
-                            //    limit: limit,
-                            //    page: page
-                            //}
-                        })
+                        Paper.find({_id: {$in: paper.paper_ids}, type: 1},function(err, doc) {
+                            if(!err) {
+                                res.json({
+                                    code: 1,
+                                    text: '返回查询成功',
+                                    data: paper,
+                                    paperdoc: doc
+                                    //paging: {
+                                    //    total: paperdoc.topics.length,
+                                    //    limit: limit,
+                                    //    page: page
+                                    //}
+                                });
+                            }else {
+                                console.log(paper);
+                                return res.json({code:-1,text:'paper id find error'});
+                            }
+                        });
+
                     } else {
                         console.log(err);
                         res.json({code: -1, text: err});
@@ -399,6 +403,11 @@ router.post('/r_ran', function (req, res, next) {
         return res.json({code: -1, text: '未传用户id'});
     }
 
+    var start_time = exam_g.start_time;
+    var end_time = exam_g.end_time;
+
+    var now_time = new Date();
+    console.log('this is now !', now_time);
 
     var class_id_arr = [class_id];
     var query = {
@@ -410,6 +419,18 @@ router.post('/r_ran', function (req, res, next) {
                 //0. 随机卷 1. 模版考试
                 'type': 0
             }
+            // ,
+            // {
+            //     'start_time': {
+            //         $lte: now_time
+            //     }
+            // }
+            // ,
+            // {
+            //     'end_time': {
+            //         $gte: now_time
+            //     }
+            // }
             //,
             //{
             //    generated_papers: {
@@ -436,7 +457,7 @@ router.post('/r_ran', function (req, res, next) {
                 //    }
                 //}
             }
-        }).exec(function (err, docs) {
+        }).lean().exec(function (err, docs) {
             if (!err) {
                 //var filtereddocs = _.filter(docs, function (doc) {
                 //    return doc.generated_papers.length != 0
@@ -450,6 +471,25 @@ router.post('/r_ran', function (req, res, next) {
                 //}
                 //
                 //console.log(docs);
+
+                for(var i=0;i<docs.length;i++) {
+                    console.log(moment(now_time).format('YYYY-MM-DD HH:mm:ss'), moment(docs[i].end_time).format('YYYY-MM-DD HH:mm:ss'));
+                    if(docs[i].end_time) {
+                        if( moment(now_time).valueOf() < moment(docs[i].end_time).valueOf() ){
+                            docs[i].expire = false;
+                        } else {
+                            docs[i].expire = true;
+                        }
+                    }else{
+                        docs[i].expire = true;
+                    }
+                    // if( moment(now_time).valueOf() > moment(docs[i].end_time).valueOf()){
+                    //     docs[i].expire = true;
+                    // }else{
+                    //     docs[i].expire = false;
+                    // }
+                }
+
                 res.json({code: 1, text: '查询generator成功！', data: docs});
 
             } else {
@@ -486,6 +526,11 @@ router.post('/getgenerators', function (req, res, next) {
     if (!author_id) {
         return res.json({code: -1, text: '未传authorid'})
     }
+    var classid = req.body.classid;
+    if(!classid) {
+        return res.json({code: -1, text: '未传classid'});
+    }
+
     var israndom = req.body.israndom;
     console.log(israndom);
     //israndom = israndom?0:1;
@@ -496,14 +541,97 @@ router.post('/getgenerators', function (req, res, next) {
         ran = 0;
     }
     console.log(israndom,ran);
-    Exam_g.find({author_id: author_id,type: ran}, function (err, doc) {
-        if (!err) {
-            console.log(doc);
-            res.json({code: 1, text: '返回authorid', data: doc})
-        } else {
-            res.json({code: -1, text: '查询生成器错误', data: err})
+
+    Exam_g.aggregate(
+        [
+            {
+                '$match': {
+                    $and: [
+                        {
+                            'author_id': parseInt(author_id)
+                        },
+                        {
+                            'type': parseInt(ran)
+                        },
+                        {
+                            "class_ids": {
+                                $elemMatch: {
+                                    $eq: classid
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                '$lookup': {
+                    from: 'paper2exams',
+                    localField: "_id",
+                    foreignField: "generator",
+                    as: "p2es"
+                }
+            },
+            // {
+            //     '$unwind': '$p2es'
+            // },
+            // {
+            //     '$group': {
+            //        _id: '$_id',
+            //        topicNO: {
+            //             $sum: "$p2es.topicNO"
+            //        },
+            //         correctNO: {
+            //             $sum: "$p2es.correctNO"
+            //         }
+            //        //"userid": "userid"
+            //     }
+            // }
+            // // ,
+            // {
+            //     '$project': {
+            //         topics: "$topics"
+            //     }
+            // }
+        ], function(err, mis) {
+            if (!err) {
+                console.log(mis);
+                var mimi = mis;
+                if(mis) {
+                    for(var i=0;i<mimi.length;i++) {
+                        var correctNO = 0;
+                        var topicNO = 0;
+                        for(var j=0;j<mimi[i].p2es.length;j++) {
+                            if(mimi[i].p2es[j].correctNO) {
+                                correctNO += mimi[i].p2es[j].correctNO;
+                            }
+                            if(mimi[i].p2es[j].topicNO) {
+                                topicNO += mimi[i].p2es[j].topicNO;
+                            }
+                        }
+                        mimi[i].correctNO = correctNO;
+                        mimi[i].topicNO = topicNO;
+                        mimi[i].paperNO = mimi[i].p2es.length;
+                        delete mimi[i].p2es;
+                    }
+                }
+                res.json({code: 1, text: '返回成功', data: mimi})
+            } else {
+                res.json({code: -1, text: '查询生成器错误', data: err})
+            }
         }
-    });
+    );
+
+
+
+
+    // Exam_g.find({author_id: author_id,type: ran}, function (err, doc) {
+    //     if (!err) {
+    //         console.log(doc);
+    //         res.json({code: 1, text: '返回authorid', data: doc})
+    //     } else {
+    //         res.json({code: -1, text: '查询生成器错误', data: err})
+    //     }
+    // });
 });
 
 
@@ -909,6 +1037,7 @@ router.post('/cg_ran', function (req, res, next) {
     var author_id = exam_g.author_id;
     var generator_id = exam_g.generator_id;
     var class_id = exam_g.class_id;
+    var duration = exam_g.duration;
 
     //以paperid为模版新建一个试卷副本
     Paper
@@ -982,17 +1111,23 @@ router.post('/cg_ran', function (req, res, next) {
                     console.log(sampledArr[i].answers,sampledArr[i].trueanswers,'-----1-1-1-1--1-1-1-')
                 }
 
+                var end_time = moment().add(duration,'minutes').format('YYYY-MM-DD HH:mm:ss');
+                console.log(' this is end_time ', end_time);
+
                 var paper2exam0 = new Paper2exam({
                     name: name,
                     desc: desc,
                     //随机生成卷
                     type: 0,
+                    //结束时间
+                    endTime: end_time,
                     //是否完成
                     status: 0,
                     topicNO: topic_count,
                     authorid: author_id,
                     classid: class_id,
                     userid: user_id,
+                    duration: duration,
                     generator: generator_id,
                     topics: sampledArr,
                     imgs: [],

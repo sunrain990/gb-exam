@@ -36,5 +36,6 @@ module.exports = function() {
     require('../../models/paper.model.js');
     require('../../models/exam_g.model.js');
     require('../../models/paper2exam.model.js')
+    require('../../models/mistake.model.js')
     return db;
 }

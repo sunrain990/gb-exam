@@ -21,6 +21,11 @@ var Paper2examTopicSchema = new mongoose.Schema({
         answers: [ mongoose.Schema.Types.Mixed ],
         trueanswers: [ mongoose.Schema.Types.Mixed ],
         options: [ Paper2examOptionSchema ],
+        total: { type: Number },
+        correctNO: { type: Number },
+        mistakes: [ mongoose.Schema.Types.Mixed ],
+        //是否被收藏
+        //favor: { type: Boolean },
         status: { type: Number, default: 0 },
         //题目正确与否 0false
         correct: { type: Number, default: 0 },
@@ -43,9 +48,18 @@ var Paper2examSchema = new mongoose.Schema({
     endTime: { type: Date },
     //试卷是否完成
     status: { type: Number, default: 0 },
+    //试卷完成时间
+    finishTime: { type: Date},
+    wasteTime: { type: String },
+    duration: {
+        type: String, default: '121'
+    },
+    correctNO: { type: Number },
     lastEdit: { type: Date, default: Date.now },//当你插入文档，自动就会生成日期
     topicNO: { type: Number, default: 0},
     authorid: { type: Number, default: 0},
+    //技术方向
+    tecdir: { type: mongoose.Schema.Types.Mixed },
     userid: { type: Number, required: true },
     classid: { type: Number, required: true },
     generator: {
