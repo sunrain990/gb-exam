@@ -49,7 +49,16 @@ router.post('/l', function (req, res, next) {
             '$eq': [ '$$topic.last', false]
         };
     } else if ( pmprocker == 'all') {
-        cond = {};
+        cond = {
+            '$or': [
+                {
+                    '$eq': ['$$topic.favor', true]
+                },
+                {
+                    '$eq': [ '$$topic.last', false]
+                }
+            ]
+        };
     }
     var query = {
         $and: [
@@ -270,7 +279,10 @@ router.post('/r_mis_topic', function (req, res, next) {
                 console.log('false');
                 mis.topics.id(topic_id).last = true;
             } else if ( pmprocker == 'all' ) {
-                mis.topics.pull(topic_id);
+                console.log('all');
+                mis.topics.id(topic_id).favor = false;
+                mis.topics.id(topic_id).last = true;
+                // mis.topics.pull(topic_id);
             }
 
             mis.save(function(err, mis0) {
@@ -312,7 +324,7 @@ router.post('/favor', function (req, res, next) {
             mis.topics.id(topic_id).favor = true;
             mis.save(function(err, mis0) {
                 if(!err) {
-                    res.json({code:1, text: '收藏成功！'})
+                    res.json({code:1, text: '收藏成功！', data: mis0})
                 }else {
                     res.json({code:-1, text: '收藏失败！'})
                 }

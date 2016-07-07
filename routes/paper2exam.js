@@ -65,44 +65,91 @@ router.post('/c', function (req, res, next) {
                     }
 
                     if (p2e.status == 0) {
-                        Paper2exam
-                            .findOne(
-                            query,
-                            {
-                                "mark": 0,
-                                "topics.trueanswers": 0
-                            })
-                            //.populate({
-                            //    path: 'generated_papers',
-                            //    populate: {
-                            //        path: 'paper',
-                            //        model: 'Paper'
-                            //    },
-                            //    options: {
-                            //        //limit: limit,
-                            //        //sort: {
-                            //        //    time: -1
-                            //        //},
-                            //        //skip: (page-1)*limit
-                            //    }
-                            //})
-                            .exec(function (err, p2e) {
-                                if (!err) {
+                        // Paper2exam
+                        //     .findOne(
+                        //     query,
+                        //     {
+                        //         "mark": 0,
+                        //         "topics.trueanswers": 0
+                        //     })
+                        //     //.populate({
+                        //     //    path: 'generated_papers',
+                        //     //    populate: {
+                        //     //        path: 'paper',
+                        //     //        model: 'Paper'
+                        //     //    },
+                        //     //    options: {
+                        //     //        //limit: limit,
+                        //     //        //sort: {
+                        //     //        //    time: -1
+                        //     //        //},
+                        //     //        //skip: (page-1)*limit
+                        //     //    }
+                        //     //})
+                        //     .exec(function (err, p2e) {
+                        //         if (!err) {
+                        //             return res.json({
+                        //                 code: 1,
+                        //                 text: '返回新试卷成功',
+                        //                 data: p2e,
+                        //                 countdown: {
+                        //                     now_time:new Date(),
+                        //                     //end_time:moment(p2e.endTime).valueOf()
+                        //                     end_time: p2e.endTime
+                        //                 }
+                        //             })
+                        //         } else {
+                        //             console.log(err);
+                        //             return res.json({code: -1, text: err});
+                        //         }
+                        //     });
+
+
+                        Mistake.aggregate(
+                            [
+                                {
+                                    '$match': {
+                                        $and: [
+                                            {
+                                                'userid': parseInt(p2e.userid)
+                                            },
+                                            {
+                                                'generator': new mongoose.Types.ObjectId(p2e.generator)
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    '$project': {
+                                        topics: "$topics"
+                                    }
+                                }
+                            ], function(err, mis) {
+                                //keyed数组
+                                if(!err) {
+                                    var keyed = _.keyBy(mis[0].topics, '_id');
+
+
+                                    var p2p2 = p2e.toObject();
+                                    for(var i=0;i<p2p2.topics.length;i++) {
+                                        p2p2.topics[i].favor = keyed[p2p2.topics[i]._id].favor;
+                                    }
                                     return res.json({
                                         code: 1,
                                         text: '返回新试卷成功',
-                                        data: p2e,
+                                        data: p2p2,
                                         countdown: {
                                             now_time:new Date(),
                                             //end_time:moment(p2e.endTime).valueOf()
                                             end_time: p2e.endTime
                                         }
-                                    })
-                                } else {
-                                    console.log(err);
-                                    return res.json({code: -1, text: err});
+                                    });
+                                } else{
+                                    return res.json({code: -1, text: '返回出错', data: err})
                                 }
-                            });
+                            }
+                        );
+
                     } else if (p2e.status == 1) {
 
                         Mistake.aggregate(
@@ -407,7 +454,7 @@ router.post('/u_mark', function (req, res, next) {
                                                             //0.根据生成器生成的题库 1.题库 2.错题库
                                                             //type: { type: Number, default: 2 },
                                                             //createTime: { type: Date, default: Date.now  },
-                                                            //lastEdit: { type: Date, default: Date.now },//当你插入文档，自动就会生成日期
+                                                            lastEdit: { type: Date, default: Date.now },//当你插入文档，自动就会生成日期
                                                             //topicNO: { type: Number, default: 0},
                                                             authorid: p2e.authorid,
                                                             userid: p2e.userid,
@@ -474,7 +521,49 @@ router.post('/u_mark', function (req, res, next) {
                                                         mis.save(function(err, mistake) {
                                                             if(!err){
                                                                 console.log(p2exam0, 'after save');
-                                                                res.json({code:1,text:'mistake update success',data:p2exam0})
+
+
+
+                                                                Mistake.aggregate(
+                                                                    [
+                                                                        {
+                                                                            '$match': {
+                                                                                $and: [
+                                                                                    {
+                                                                                        'userid': parseInt(p2exam0.userid)
+                                                                                    },
+                                                                                    {
+                                                                                        'generator': new mongoose.Types.ObjectId(p2exam0.generator)
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        },
+                                                                        {
+                                                                            '$project': {
+                                                                                topics: "$topics"
+                                                                            }
+                                                                        }
+                                                                    ], function(err, mis) {
+                                                                        //keyed数组
+                                                                        if(!err) {
+                                                                            var keyed = _.keyBy(mis[0].topics, '_id');
+
+
+                                                                            var p2p2 = p2exam0.toObject();
+                                                                            for(var i=0;i<p2p2.topics.length;i++) {
+                                                                                p2p2.topics[i].favor = keyed[p2p2.topics[i]._id].favor;
+                                                                            }
+                                                                            return res.json({
+                                                                                code: 1,
+                                                                                text: '返回新试卷成功',
+                                                                                data: p2p2,
+                                                                            });
+                                                                        } else{
+                                                                            return res.json({code: -1, text: '返回出错', data: err})
+                                                                        }
+                                                                    }
+                                                                )
+                                                                // res.json({code:1,text:'mistake update success',data:p2exam0})
                                                             }else{
                                                                 res.json({code:-1,text:'更新mistake fail'});
                                                             }

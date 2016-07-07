@@ -14,6 +14,7 @@ var Paper = mongoose.model('Paper');
 var Topic = mongoose.model('Topic');
 var Exam_g = mongoose.model('Exam_g');
 var Paper2exam = mongoose.model('Paper2exam');
+var Mistake = mongoose.model('Mistake');
 
 
 function Filtermsg(msg) {
@@ -1136,16 +1137,86 @@ router.post('/cg_ran', function (req, res, next) {
 
                 paper2exam0.save(function(err, doc){
                     if(!err) {
-                        console.log(doc, '----->paper2exam doc');
-                        res.json({
-                            code: 1,
-                            text: '返回查询成功',
-                            data: doc
-                            //,
-                            //sampledArr:sampledArr
-                        })
+
+                        var query = {
+                            generator: generator_id,
+                            userid: user_id
+                        }
+
+                        Mistake.findOne(query, function (err, mis) {
+                            if(!err) {
+                                //mis = mis[0];
+                                if(!mis) {
+                                    console.log('in mis!-- -- - - - -- - --');
+                                    var mistake = new Mistake({
+                                        //_id: mis_id,
+                                        name: doc.name,
+                                        desc: doc.desc,
+                                        //0.根据生成器生成的题库 1.题库 2.错题库
+                                        //type: { type: Number, default: 2 },
+                                        //createTime: { type: Date, default: Date.now  },
+                                        //lastEdit: { type: Date, default: Date.now },//当你插入文档，自动就会生成日期
+                                        //topicNO: { type: Number, default: 0},
+                                        authorid: doc.authorid,
+                                        userid: doc.userid,
+                                        classid: doc.classid,
+                                        generator: doc.generator,
+                                        topics: doc.topics,
+                                        imgs: []
+                                    });
+
+                                    // for (var i = 0; i < mistake.topics.length; i++) {
+                                    //     mistake.topics[i].correctNO = keyed[mistake.topics[i]._id].correct;
+                                    //     mistake.topics[i].total = keyed[mistake.topics[i]._id].total;
+                                    //     mistake.topics[i].mistakes.push(mistake.topics[i].answers);
+                                    //     // 确保是未编辑状态
+                                    //     mistake.topics[i].status = 1;
+                                    //     if(mistake.topics[i].correct) {
+                                    //         mistake.topics[i].last = true;
+                                    //     }else {
+                                    //         mistake.topics[i].last = false;
+                                    //     }
+                                    // }
+
+                                    mistake.save(function(err, mis0) {
+                                        if(!err){
+                                            // return res.json({code:1,text:'mistake new success',data:p2exam0})
+
+                                            console.log(doc, '----->paper2exam doc');
+                                            return res.json({
+                                                code: 1,
+                                                text: '返回查询成功',
+                                                data: doc
+                                                //,
+                                                //sampledArr:sampledArr
+                                            })
+                                        }else{
+                                            return res.json({code:-1,text:'mistake save err'})
+                                        }
+                                    });
+                                }else {
+                                    console.log(mis,'yoyoyoyoyooyooyooyoyoy mimimimis');
+                                    var misarr = JSON.parse(JSON.stringify(mis.toObject().topics));
+                                    var docarr = JSON.parse(JSON.stringify(doc.toObject().topics));
+                                    JSON.stringify(misarr)
+                                    var unionedTopics = _.unionBy(misarr, docarr, '_id');
+                                    console.log(misarr, docarr, unionedTopics, 'this is unionedTopics!!!');
+                                    mis.topics = unionedTopics;
+                                    mis.save(function(err, mis0) {
+                                        if(!err) {
+                                            return res.json({code:1,text:'mistake already exists!',data:doc})
+                                        }else {
+                                            return res.json({code:-1, text:'mistake error', data:err})
+                                        }
+                                    });
+                                    //TODO mistake exits
+                                }
+                            }else {
+                                return res.json({code:-1,text:'mistake fool'})
+                            }
+                        });
                     }else{
-                        res.json({code:-1,text:'新建考题失败save失败',data:err})
+                        return res.json({code:-1,text:'新建考题失败save失败',data:err})
                     }
                 })
             } else {
