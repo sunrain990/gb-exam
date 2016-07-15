@@ -27,6 +27,9 @@ function handleError () {
         } else if (ipv4 == '120.26.245.233') {
             config.mongodb = 'mongodb://121.41.41.46/exam';
             console.log('test',config.mongodb);
+        } else if (ipv4 == '120.55.90.62') {
+            config.mongodb = 'mongodb://121.41.37.217/exam';
+            console.log('node formal',config.mongodb);
         }
     } else if (os.networkInterfaces().lo0) {
         for (var i = 0; i < os.networkInterfaces().lo0.length; i++) {
