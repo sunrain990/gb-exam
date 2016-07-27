@@ -23,14 +23,14 @@ function handleError () {
             console.log('informal');
         } else if (ipv4 == '121.41.123.2') {
             // config.mongodb = 'mongodb://121.41.37.217/exam';
-            config.mongodb = 'mongodb://10.168.172.48/exam';
+            config.mongodb = 'mongodb://10.117.206.233/exam';
             console.log('formal');
         } else if (ipv4 == '120.26.245.233') {
             config.mongodb = 'mongodb://121.41.41.46/exam';
             console.log('test',config.mongodb);
         } else if (ipv4 == '120.55.90.62') {
             // config.mongodb = 'mongodb://121.41.37.217/exam';
-            config.mongodb = 'mongodb://10.168.172.48/exam';
+            config.mongodb = 'mongodb://10.117.206.233/exam';
             console.log('node formal',config.mongodb);
         }
     } else if (os.networkInterfaces().lo0) {
