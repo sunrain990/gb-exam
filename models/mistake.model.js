@@ -61,7 +61,11 @@ var MistakeSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId, ref: 'Exam_g'
         },
         topics: [MistakeTopicSchema],
-        imgs: [mongoose.Schema.Types.Mixed]
+        imgs: [mongoose.Schema.Types.Mixed],
+        //做试卷数
+        papernums: {type: Number, default: 0},
+        //试卷题目数
+        topicNO: {type: Number, default: 0}
     }
 //, {versionKey:false}//这个就是处理掉自动插入文档的__v这个属性
 );

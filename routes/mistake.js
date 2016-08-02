@@ -195,6 +195,100 @@ router.post('/l', function (req, res, next) {
     //});
 });
 
+
+router.post('/mis_analysis', function(req, res, next) {
+    var exam_d = req.body.exam_d;
+
+    var user_id = exam_d.user_id;
+    var generator_id = exam_d.generator_id;
+    // if (!user_id) {
+    //     return res.json({code: -1, text: '未传user_id'})
+    // }
+    if (!generator_id) {
+        return res.json({code: -1, text: '未传generator_id'});
+    }
+    Mistake.aggregate(
+        [
+            {
+                '$match': {
+                    $and: [
+                        // {
+                        //     'userid': parseInt(user_id)
+                        // },
+                        {
+                            'generator': new mongoose.Types.ObjectId(generator_id)
+                        }
+                    ]
+                }
+            },
+            {
+                '$project': {
+                    '_id': '$_id',
+                    'name': '$name',
+                    'lastEdit': '$lastEdit',
+                    'desc': '$desc',
+                    'classid': '$classid',
+                    'authorid': '$authorid',
+                    'generator': '$generator',
+                    'userid': '$userid',
+                    'papernums': '$papernums',
+                    'topicNO': '$topicNO',
+                    topics: {
+                        $filter: {
+                            input: '$topics',
+                            as: 'topic',
+                            cond: {
+                                '$eq': ['$$topic.last', false]
+                            }
+                        }
+                    },
+                }
+            }
+            ,
+            {
+                '$project': {
+                    '_id': '$_id',
+                    'name': '$name',
+                    'lastEdit': '$lastEdit',
+                    'desc': '$desc',
+                    'classid': '$classid',
+                    'authorid': '$authorid',
+                    'generator': '$generator',
+                    'userid': '$userid',
+                    'papernums': '$papernums',
+                    'topicNO': '$topicNO',
+                    // topics: {
+                    //     $slice:['$topics', (parseInt(page)-1)*parseInt(limit), parseInt(limit)]
+                    // },
+                    wrong: {
+                        $size: '$topics'
+                    }
+                }
+            }
+
+        ], function (err, mis) {
+            if (!err) {
+                console.log(mis,'this is mis');
+                if(mis.length == 0){
+                    res.json({
+                        code:-1,
+                        text: '未有返回,还没有人做题'
+                    })
+                }else {
+                    res.json({
+                        code: 1,
+                        text: '返回exsits成功'
+                        ,
+                        data: mis
+                    });
+                }
+
+            } else {
+                res.json({code: -1, text: '查询exsits错误', data: err})
+            }
+        });
+})
+
 router.post('/exsits', function (req, res, next) {
     var mis = req.body.mis;
     var user_id = mis.user_id;

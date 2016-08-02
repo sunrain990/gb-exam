@@ -1162,6 +1162,7 @@ router.post('/cg_ran', function (req, res, next) {
                                         classid: doc.classid,
                                         generator: doc.generator,
                                         topics: doc.topics,
+                                        topicNO: doc.topicNO,
                                         imgs: []
                                     });
 

@@ -517,12 +517,11 @@ router.post('/u_mark', function (req, res, next) {
                                                             }
                                                         }
                                                         mis.lastEdit = new Date();
+                                                        mis.papernums += 1;
                                                         console.log(p2exam0, 'before save');
                                                         mis.save(function(err, mistake) {
                                                             if(!err){
                                                                 console.log(p2exam0, 'after save');
-
-
 
                                                                 Mistake.aggregate(
                                                                     [
