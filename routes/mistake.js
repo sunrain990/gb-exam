@@ -221,54 +221,135 @@ router.post('/mis_analysis', function(req, res, next) {
                     ]
                 }
             },
-            {
-                '$project': {
-                    '_id': '$_id',
-                    'name': '$name',
-                    'lastEdit': '$lastEdit',
-                    'desc': '$desc',
-                    'classid': '$classid',
-                    'authorid': '$authorid',
-                    'generator': '$generator',
-                    'userid': '$userid',
-                    'papernums': '$papernums',
-                    'topicNO': '$topicNO',
-                    topics: {
-                        $filter: {
-                            input: '$topics',
-                            as: 'topic',
-                            cond: {
-                                '$eq': ['$$topic.last', false]
-                            }
-                        }
-                    },
-                }
-            }
-            ,
-            {
-                '$project': {
-                    '_id': '$_id',
-                    'name': '$name',
-                    'lastEdit': '$lastEdit',
-                    'desc': '$desc',
-                    'classid': '$classid',
-                    'authorid': '$authorid',
-                    'generator': '$generator',
-                    'userid': '$userid',
-                    'papernums': '$papernums',
-                    'topicNO': '$topicNO',
-                    // topics: {
-                    //     $slice:['$topics', (parseInt(page)-1)*parseInt(limit), parseInt(limit)]
-                    // },
-                    wrong: {
-                        $size: '$topics'
-                    }
-                }
-            }
+            // {
+            //     '$project': {
+            //         '_id': '$_id',
+            //         'name': '$name',
+            //         'lastEdit': '$lastEdit',
+            //         'desc': '$desc',
+            //         'classid': '$classid',
+            //         'authorid': '$authorid',
+            //         'generator': '$generator',
+            //         'userid': '$userid',
+            //         'papernums': '$papernums',
+            //         'topicNO': '$topicNO',
+            //         topics: '$topics',
+            //     }
+            // }
+            // ,
+            // {
+            //     $unwind: "$topics"
+            // },
+            // {
+            //     $unwind: '$topics.mistakes'
+            // },
+            // {
+            //     '$project': {
+            //         '_id': '$_id',
+            //         'name': '$name',
+            //         'lastEdit': '$lastEdit',
+            //         'desc': '$desc',
+            //         'classid': '$classid',
+            //         'authorid': '$authorid',
+            //         'generator': '$generator',
+            //         'userid': '$userid',
+            //         'papernums': '$papernums',
+            //         'topicNO': '$topicNO',
+            //         // topics: {
+            //         //     $slice:['$topics', (parseInt(page)-1)*parseInt(limit), parseInt(limit)]
+            //         // },
+            //         'correct': '$topics.mistakes.correct'
+            //         // wrong: {
+            //         //     $size: '$topics'
+            //         // }
+            //     }
+            // },
+            // {
+            //     $group: {
+            //         // _id: '$userid',
+            //         // // name: '$topics.name',
+            //         // correct: {
+            //         //     $sum: '$correct'
+            //         // }
+            //         key: {
+            //             _id:1,
+            //             name:1
+            //         }
+            //     }
+            // }
+            // ,
+            // {
+            //     $group: {
+            //         _id: '$_id',
+            //         total: {
+            //             $sum: 1
+            //         }
+            //         ,
+            //         correct: {
+            //             $sum: {
+            //                 $cond: [
+            //                     {
+            //                         $and:[
+            //                             {
+            //                                 $eq: ['$correct', 1]
+            //                             }
+            //                         ]
+            //                     }
+            //                     ,1,0
+            //                 ]
+            //             }
+            //         }
+            //     }
+            // }
+            // {
+            //     '$project': {
+            //         '_id': '$_id',
+            //         'name': '$name',
+            //         'lastEdit': '$lastEdit',
+            //         'desc': '$desc',
+            //         'classid': '$classid',
+            //         'authorid': '$authorid',
+            //         'generator': '$generator',
+            //         'userid': '$userid',
+            //         'papernums': '$papernums',
+            //         'topicNO': '$topicNO',
+            //         // topics: {
+            //         //     $slice:['$topics', (parseInt(page)-1)*parseInt(limit), parseInt(limit)]
+            //         // },
+            //         wrong: {
+            //             $size: '$topics'
+            //         }
+            //     }
+            // }
 
         ], function (err, mis) {
             if (!err) {
                 console.log(mis,'this is mis');
+                for(var i=0;i<mis.length;i++) {
+                    if(mis[i]) {
+                        mis[i].wrong = 0;
+                        for(var j=0;j<mis[i]['topics'].length;j++) {
+                            if(mis[i]['topics'][j]) {
+                                for(var m=0;m<mis[i]['topics'][j]['mistakes'].length;m++) {
+                                    if(mis[i]['topics'][j]['mistakes'][m].correct == 0){
+                                        mis[i].wrong += 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // for(var i=0;i<mis.topics.length;i++) {
+                //     console.log(mis.topics[i],'------------>topic')
+                //     // for(var j=0;j<mis.topics[i]['mistakes'].length;j++) {
+                //     //     if(a.topics[i].mistakes[j].correct == 1){
+                //     //         mis.correctNO += 1;
+                //     //     }
+                //     // }
+                // }
+
+
                 if(mis.length == 0){
                     res.json({
                         code:-1,

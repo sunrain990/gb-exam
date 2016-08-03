@@ -422,7 +422,11 @@ router.post('/u_mark', function (req, res, next) {
                                         console.log('dodododoodo correct - -- - -- ', keyed[p2exam0.topics[i]._id].correct);
                                         p2exam0.topics[i].correctNO = keyed[p2exam0.topics[i]._id].correct;
                                         p2exam0.topics[i].total = keyed[p2exam0.topics[i]._id].total;
-                                        p2exam0.topics[i].mistakes.push(p2exam0.topics[i].answers);
+                                        // p2exam0.topics[i].mistakes.push(p2exam0.topics[i].answers);
+                                        p2exam0.topics[i].mistakes.push({
+                                            answer:p2exam0.topics[i].answers,
+                                            correct: p2exam0.topics[i].correct
+                                        });
                                     }
 
                                     //保存完成后试卷
@@ -460,14 +464,21 @@ router.post('/u_mark', function (req, res, next) {
                                                             userid: p2e.userid,
                                                             classid: p2e.classid,
                                                             generator: p2e.generator,
-                                                            topics: p2exam0.topics,
+                                                            // topics: p2exam0.topics,
+                                                            topics: p2examsaved.topics,
                                                             imgs: []
                                                         });
 
                                                         for (var i = 0; i < mistake.topics.length; i++) {
                                                             mistake.topics[i].correctNO = keyed[mistake.topics[i]._id].correct;
                                                             mistake.topics[i].total = keyed[mistake.topics[i]._id].total;
-                                                            mistake.topics[i].mistakes.push(mistake.topics[i].answers);
+                                                            // mistake.topics[i].mistakes.push(mistake.topics[i].answers);
+                                                            mistake.topics[i].mistakes.push(
+                                                                {
+                                                                    answer:p2exam0.topics[i].answers,
+                                                                    correct: p2exam0.topics[i].correct
+                                                                }
+                                                            );
                                                             // 确保是未编辑状态
                                                             mistake.topics[i].status = 1;
                                                             if(mistake.topics[i].correct) {
@@ -494,7 +505,13 @@ router.post('/u_mark', function (req, res, next) {
 
                                                                 mis.topics.id(tmp_id).total = keyed[tmp_id].total;
                                                                 mis.topics.id(tmp_id).correctNO = keyed[tmp_id].correct;
-                                                                mis.topics.id(tmp_id).mistakes.push(p2exam0.topics[i].answers);
+                                                                // mis.topics.id(tmp_id).mistakes.push(p2exam0.topics[i].answers);
+                                                                mis.topics.id(tmp_id).mistakes.push(
+                                                                {
+                                                                    answer:p2exam0.topics[i].answers,
+                                                                    correct: p2exam0.topics[i].correct
+                                                                }
+                                                                );
 
                                                                 if(p2exam0.topics[i].correct) {
                                                                     mis.topics.id(tmp_id).last = true;
@@ -506,7 +523,12 @@ router.post('/u_mark', function (req, res, next) {
                                                                 var topic = p2exam0.topics[i];
                                                                 topic.total = keyed[tmp_id].total;
                                                                 topic.correctNO = keyed[tmp_id].correct;
-                                                                topic.mistakes.push(p2exam0.topics[i].answers);
+                                                                // topic.mistakes.push(p2exam0.topics[i].answers);
+                                                                topic.mistakes.push({
+                                                                    answer:p2exam0.topics[i].answers,
+                                                                    correct: p2exam0.topics[i].correct
+                                                                });
+
                                                                 mis.topics.push(topic);
 
                                                                 if(p2exam0.topics[i].correct) {
