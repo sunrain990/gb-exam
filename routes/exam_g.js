@@ -572,6 +572,11 @@ router.post('/getgenerators', function (req, res, next) {
                     as: "p2es"
                 }
             },
+            { $sort : { create_time : -1 } }
+            ,
+            {
+                '$limit': 5
+            }
             // {
             //     $out: "outgenerators"
             // }
