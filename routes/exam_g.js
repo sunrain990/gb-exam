@@ -575,7 +575,7 @@ router.post('/getgenerators', function (req, res, next) {
             { $sort : { create_time : -1 } }
             ,
             {
-                '$limit': 5
+                '$limit': 12
             }
             // {
             //     $out: "outgenerators"
