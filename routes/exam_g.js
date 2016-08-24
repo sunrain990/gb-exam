@@ -572,9 +572,9 @@ router.post('/getgenerators', function (req, res, next) {
                     as: "p2es"
                 }
             },
-            {
-                $out: "outgenerators"
-            }
+            // {
+            //     $out: "outgenerators"
+            // }
             // {
             //     '$unwind': '$p2es'
             // },
