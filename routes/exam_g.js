@@ -5,7 +5,7 @@ var express = require('express');
 var router = express.Router();
 var _ = require('lodash');
 
-var Mysql = require('../config/db/my');
+// var Mysql = require('../config/db/my');
 var moment = require('moment');
 
 var mongoose = require('mongoose');
