@@ -30,7 +30,7 @@ function handleError () {
             console.log('test',config.mongodb);
         } else if (ipv4 == '120.55.90.62') {
             // config.mongodb = 'mongodb://121.41.37.217/exam';
-            config.mongodb = 'mongodb://10.117.206.233/exam';
+            config.mongodb = 'mongodb://127.0.0.1/exam';
             console.log('node formal',config.mongodb);
         }
     } else if (os.networkInterfaces().lo0) {
