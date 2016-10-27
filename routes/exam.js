@@ -305,11 +305,52 @@ router.post('/getpapers', function(req, res, next) {
     if(!authorid){
         return res.json({code:-1,text:'未传authorid'})
     }
+    var paging = req.body.paging;
+    if(!paging) {
+        return res.json({code: -1, text: '分页错误!', data: '分页错误!'});
+    }
+    var limit = paging.limit;
+    // var skip = 1;
+    var skip = (paging.page-1) * limit;
+
+    console.log(limit, skip, 'this is limit skip . . .. . . . . . sssss');
+
     //查询题库为1的，没有生成器生成的题库模版
-    Paper.find({authorid:authorid, type: 1},function(err, doc) {
-        res.json({code:1,text:'返回authorid',data:doc})
-        console.log(doc);
+
+
+   var query =  Paper.find(
+        {
+            authorid:authorid, type: 1
+        });
+    query.skip(parseInt(skip));
+    query.limit(parseInt(limit));
+
+    Paper.count({}, function(err, count) {
+        if(!err) {
+            query.exec(function(err, docs) {
+                console.log(docs);
+                res.json({code:1,text:'返回authorid',data:docs,paging:{total:count}});
+            });
+        }else {
+            res.json({code: -1, text: '总数错误!', data: '总数错误!'});
+        }
     });
+
+    // ,
+    //
+    // function(err, doc) {
+    //     console.log(doc);
+    //     res.json({code:1,text:'返回authorid',data:doc,})
+    // }
+
+
+    // Paper.count({}, function(err, count) {
+    //     if(!err) {
+    //     }else {
+    //         res.json({code: -1, text: '总数错误!', data: '总数错误!'});
+    //     }
+    // });
+
 });
 
 

@@ -541,6 +541,16 @@ router.post('/getgenerators', function (req, res, next) {
     }else if(israndom == 'true') {
         ran = 0;
     }
+
+    var paging = req.body.paging;
+
+    if(!paging) {
+        return res.json({code: -1, text: '分页错误!', data: '分页错误!'});
+    }
+    var limit = paging.limit;
+    // var skip = 1;
+    var skip = (paging.page-1) * limit;
+    console.log(limit, skip, 'this is limit skip . . .. . . . . . sssss');
     console.log(israndom,ran);
 
     Exam_g.aggregate(
@@ -575,7 +585,11 @@ router.post('/getgenerators', function (req, res, next) {
             { $sort : { create_time : -1 } }
             ,
             {
-                '$limit': 12
+                '$skip': skip
+            }
+            ,
+            {
+                '$limit': parseInt(limit)
             }
             // {
             //     $out: "outgenerators"
@@ -623,7 +637,37 @@ router.post('/getgenerators', function (req, res, next) {
                         delete mimi[i].p2es;
                     }
                 }
-                res.json({code: 1, text: '返回成功', data: mimi})
+
+
+                Exam_g.aggregate(
+                    [
+                        {
+                            '$match': {
+                                $and: [
+                                    {
+                                        'author_id': parseInt(author_id)
+                                    },
+                                    {
+                                        'type': parseInt(ran)
+                                    },
+                                    {
+                                        "class_ids": {
+                                            $elemMatch: {
+                                                $eq: classid
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+
+                    ],function (err,mis) {
+                        if(err) {
+                            res.json({code: -1, text: '查询生成器总数错误', data: err})
+                        }else {
+                            res.json({code: 1, text: '返回成功', data: mimi, paging:{total:mis.length}})
+                        }
+                    });
             } else {
                 res.json({code: -1, text: '查询生成器错误', data: err})
             }
