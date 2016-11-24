@@ -553,6 +553,8 @@ router.post('/getgenerators', function (req, res, next) {
     console.log(limit, skip, 'this is limit skip . . .. . . . . . sssss');
     console.log(israndom,ran);
 
+
+
     Exam_g.aggregate(
         [
             {
@@ -615,64 +617,63 @@ router.post('/getgenerators', function (req, res, next) {
             //         topics: "$topics"
             //     }
             // }
-        ], function(err, mis) {
-            if (!err) {
-                console.log(mis);
-                var mimi = mis;
-                if(mis) {
-                    for(var i=0;i<mimi.length;i++) {
-                        var correctNO = 0;
-                        var topicNO = 0;
-                        for(var j=0;j<mimi[i].p2es.length;j++) {
-                            if(mimi[i].p2es[j].correctNO) {
-                                correctNO += mimi[i].p2es[j].correctNO;
-                            }
-                            if(mimi[i].p2es[j].topicNO) {
-                                topicNO += mimi[i].p2es[j].topicNO;
-                            }
+        ]
+    ).allowDiskUse(true).exec(function(err, mis) {
+        if (!err) {
+            console.log(mis);
+            var mimi = mis;
+            if(mis) {
+                for(var i=0;i<mimi.length;i++) {
+                    var correctNO = 0;
+                    var topicNO = 0;
+                    for(var j=0;j<mimi[i].p2es.length;j++) {
+                        if(mimi[i].p2es[j].correctNO) {
+                            correctNO += mimi[i].p2es[j].correctNO;
                         }
-                        mimi[i].correctNO = correctNO;
-                        mimi[i].topicNO = topicNO;
-                        mimi[i].paperNO = mimi[i].p2es.length;
-                        delete mimi[i].p2es;
+                        if(mimi[i].p2es[j].topicNO) {
+                            topicNO += mimi[i].p2es[j].topicNO;
+                        }
                     }
+                    mimi[i].correctNO = correctNO;
+                    mimi[i].topicNO = topicNO;
+                    mimi[i].paperNO = mimi[i].p2es.length;
+                    delete mimi[i].p2es;
                 }
+            }
 
 
-                Exam_g.aggregate(
-                    [
-                        {
-                            '$match': {
-                                $and: [
-                                    {
-                                        'author_id': parseInt(author_id)
-                                    },
-                                    {
-                                        'type': parseInt(ran)
-                                    },
-                                    {
-                                        "class_ids": {
-                                            $elemMatch: {
-                                                $eq: classid
-                                            }
+            Exam_g.aggregate(
+                [
+                    {
+                        '$match': {
+                            $and: [
+                                {
+                                    'author_id': parseInt(author_id)
+                                },
+                                {
+                                    'type': parseInt(ran)
+                                },
+                                {
+                                    "class_ids": {
+                                        $elemMatch: {
+                                            $eq: classid
                                         }
                                     }
-                                ]
-                            }
+                                }
+                            ]
                         }
-
-                    ],function (err,mis) {
-                        if(err) {
-                            res.json({code: -1, text: '查询生成器总数错误', data: err})
-                        }else {
-                            res.json({code: 1, text: '返回成功', data: mimi, paging:{total:mis.length}})
-                        }
-                    });
-            } else {
-                res.json({code: -1, text: '查询生成器错误', data: err})
-            }
+                    }
+                ],function (err,mis) {
+                    if(err) {
+                        res.json({code: -1, text: '查询生成器总数错误', data: err})
+                    }else {
+                        res.json({code: 1, text: '返回成功', data: mimi, paging:{total:mis.length}})
+                    }
+                });
+        } else {
+            res.json({code: -1, text: '查询生成器错误', data: err})
         }
-    );
+    });
 
 
 
