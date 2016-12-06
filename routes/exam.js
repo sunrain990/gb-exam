@@ -325,7 +325,7 @@ router.post('/getpapers', function(req, res, next) {
     query.skip(parseInt(skip));
     query.limit(parseInt(limit));
 
-    Paper.count({}, function(err, count) {
+    Paper.count({authorid:authorid, type: 1}, function(err, count) {
         if(!err) {
             query.exec(function(err, docs) {
                 console.log(docs);
